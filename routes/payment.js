@@ -6,7 +6,16 @@ const _ = require("lodash");
 
 const { initializePayment, verifyPayment } = require("../paystack")(request);
 
-router.post("/", async (req, res) => {
+router.get("/", async (req, res) => {
+  const payments = await Payment.find();
+  try {
+    res.status(200).json(payments);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+router.post("/checkout", async (req, res) => {
   try {
     const form = {
       email: req.body.email,
@@ -41,7 +50,7 @@ router.post("/", async (req, res) => {
 router.get("/paystack/callback", (req, res) => {
   const ref = req.query.reference;
 
-  verifyPayment(ref, (error, body) => {
+  verifyPayment(ref, async (error, body) => {
     if (error) {
       //handle errors appropriately
       console.log(error);
@@ -59,7 +68,7 @@ router.get("/paystack/callback", (req, res) => {
 
     [reference, amount, email, full_name] = data;
 
-    const payer = User.findOne({ email: email });
+    const payer = await User.findOne({ email: email });
 
     newPayment = { reference, amount, payer };
     const payment = new Payment(newPayment);
@@ -76,15 +85,6 @@ router.get("/paystack/callback", (req, res) => {
         // res.redirect("/error");
       });
   });
-});
-
-router.get("/", async (req, res) => {
-  const payments = await Payment.find();
-  try {
-    res.status(200).json(payments);
-  } catch (err) {
-    res.status(500).json(err);
-  }
 });
 
 module.exports = router;
