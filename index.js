@@ -19,9 +19,22 @@ mongoose.connect(process.env.MONGO_URL).then(() => {
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    origin: [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "https://checkout.paystack.com",
+    ],
   })
 );
+
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
