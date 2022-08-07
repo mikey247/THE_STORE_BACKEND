@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 // Register
 router.post("/register", async (req, res) => {
   const newUser = new User({
+    fullName: req.body.fullName,
     username: req.body.username,
     email: req.body.email,
     password: CryptoJS.AES.encrypt(
@@ -16,7 +17,18 @@ router.post("/register", async (req, res) => {
   //
   try {
     const savedUser = await newUser.save();
-    res.status(201).json(savedUser);
+    const accessToken = jwt.sign(
+      {
+        id: savedUser.id,
+        isAdmin: savedUser.isAdmin,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "3d" }
+    );
+    res.status(201).json({
+      user: savedUser,
+      token: accessToken,
+    });
   } catch (err) {
     res.status(500).json(err);
   }

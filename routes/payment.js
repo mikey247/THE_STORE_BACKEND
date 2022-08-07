@@ -3,6 +3,7 @@ const User = require("../models/User");
 const router = require("express").Router();
 const request = require("request");
 const _ = require("lodash");
+const { response } = require("express");
 
 const { initializePayment, verifyPayment } = require("../paystack")(request);
 
@@ -34,14 +35,11 @@ router.post("/checkout", async (req, res) => {
         return;
       }
 
-      response = JSON.parse(body);
+      const response = JSON.parse(body);
       console.log(response);
       // return;
-      res.redirect(response.data.authorization_url);
+      return res.redirect(301, response.data.authorization_url);
     });
-
-    // const newPayment = await Payment.create(req.body);
-    // res.status(200).json(newPayment);
   } catch (err) {
     res.status(500).json(err);
   }
@@ -49,35 +47,50 @@ router.post("/checkout", async (req, res) => {
 
 router.get("/paystack/callback", (req, res) => {
   const ref = req.query.reference;
+  // console.log("VERIFY", ref);
 
   verifyPayment(ref, async (error, body) => {
     if (error) {
       //handle errors appropriately
-      console.log(error);
+      console.log(error, "rrrrrrrrrrr");
       return res.redirect("/error");
     }
 
-    response = JSON.parse(body);
+    const response = JSON.parse(body);
 
-    const data = _.at(response.data, [
-      "reference",
-      "amount",
-      "customer.email",
-      "metadata.full_name",
-    ]);
+    // console.log(response.data, "responserrrrrrrrrrrrrrr");
 
-    [reference, amount, email, full_name] = data;
+    // const data = _.at(response.data, [
+    //   "reference",
+    //   "amount",
+    //   "customer.email",
+    //   "metadata.full_name",
+    // ]);
 
-    const payer = await User.findOne({ email: email });
+    const data = {
+      reference: response.data.reference,
+      amount: response.data.amount,
+      email: response.data.customer.email,
+      full_name: response.data.metadata.full_name,
+    };
 
-    newPayment = { reference, amount, payer };
+    // console.log(data);
+
+    const payer = await User.findOne({ email: data.email });
+
+    const newPayment = {
+      reference: data.reference,
+      amount: data.amount / 100,
+      payer,
+    };
+
     const payment = new Payment(newPayment);
     payment
       .save()
       .then((payment) => {
         if (payment) {
           // res.redirect("/receipt/" + payment._id);
-          console.log(payment);
+          // console.log(payment, "rrr");
         }
       })
       .catch((e) => {
