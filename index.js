@@ -20,10 +20,11 @@ app.use(express.json());
 app.use(
   cors({
     origin: [
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      "http://127.0.0.1:5000",
+      "https://localhost:3000",
+      "https://127.0.0.1:3000",
+      "https://127.0.0.1:5000",
       "https://checkout.paystack.com",
+      "https://thee-store.netlify.app",
     ],
   })
 );
