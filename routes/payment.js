@@ -19,9 +19,11 @@ router.get("/", async (req, res) => {
 router.post("/checkout", async (req, res) => {
   try {
     const form = {
+      key: process.env.PAYSTACK_SECRET_KEY,
       email: req.body.email,
       amount: req.body.amount * 100,
       full_name: req.body.full_name,
+      callback: "http://localhost:5000/api/payment/paystack/callback",
     };
 
     form.metadata = {
@@ -38,7 +40,8 @@ router.post("/checkout", async (req, res) => {
       const response = JSON.parse(body);
       console.log(response);
       // return;
-      return res.redirect(301, response.data.authorization_url);
+      // res.status(200).json(response.data.authorization_url);
+      return res.redirect(response.data.authorization_url);
     });
   } catch (err) {
     res.status(500).json(err);
@@ -60,13 +63,6 @@ router.get("/paystack/callback", (req, res) => {
 
     // console.log(response.data, "responserrrrrrrrrrrrrrr");
 
-    // const data = _.at(response.data, [
-    //   "reference",
-    //   "amount",
-    //   "customer.email",
-    //   "metadata.full_name",
-    // ]);
-
     const data = {
       reference: response.data.reference,
       amount: response.data.amount,
@@ -74,7 +70,7 @@ router.get("/paystack/callback", (req, res) => {
       full_name: response.data.metadata.full_name,
     };
 
-    // console.log(data);
+    console.log(data);
 
     const payer = await User.findOne({ email: data.email });
 
@@ -89,13 +85,11 @@ router.get("/paystack/callback", (req, res) => {
       .save()
       .then((payment) => {
         if (payment) {
-          // res.redirect("/receipt/" + payment._id);
           // console.log(payment, "rrr");
         }
       })
       .catch((e) => {
         console.log(e);
-        // res.redirect("/error");
       });
   });
 });

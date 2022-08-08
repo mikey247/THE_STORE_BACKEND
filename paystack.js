@@ -31,6 +31,7 @@ const paystack = (request) => {
         "cache-control": "no-cache",
       },
     };
+    console.log(options.url);
     //
 
     const callback = (error, response, body) => {
