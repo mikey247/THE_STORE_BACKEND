@@ -25,7 +25,8 @@ app.use(
       "http://127.0.0.1:5000",
       "http://checkout.paystack.com",
       "http://thee-store.netlify.app",
-      "https://thee-store.netlify.app/",
+      "https://thee-store.netlify.app",
+      "https://the-store-six.vercel.app",
     ],
   })
 );
